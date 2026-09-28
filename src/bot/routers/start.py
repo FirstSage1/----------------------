@@ -2,7 +2,7 @@
 
 from aiogram import Router
 from aiogram.filters import CommandStart
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 
 
 router = Router(name="start")
@@ -12,5 +12,7 @@ router = Router(name="start")
 async def start_handler(message: Message) -> None:
     """Поздороваться с пользователем и объяснить назначение бота."""
     await message.answer(
-        "Привет! Я эхобот. Отправь мне сообщение, и я повторю его."
+        "Привет! Я эхобот. Отправь мне сообщение, и я повторю его. "
+        "Команды доступны в меню рядом со строкой ввода.",
+        reply_markup=ReplyKeyboardRemove(),
     )

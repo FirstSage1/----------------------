@@ -1,12 +1,19 @@
 """Обработчики сообщений для режима эхо."""
 
 from aiogram import Router
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 
 from src.bot.services.text import echo_text
 
 
 router = Router(name="echo")
+HIDE_MENU_TEXT = "Скрыть меню"
+
+
+@router.message(lambda message: message.text == HIDE_MENU_TEXT)
+async def hide_menu_handler(message: Message) -> None:
+    """Убрать экранные кнопки меню по запросу пользователя."""
+    await message.answer("Меню скрыто. Его можно открыть командой /menu.", reply_markup=ReplyKeyboardRemove())
 
 
 @router.message()
