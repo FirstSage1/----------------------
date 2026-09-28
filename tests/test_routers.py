@@ -3,21 +3,27 @@
 import asyncio
 from unittest.mock import AsyncMock
 
-from aiogram.types import Message
+from aiogram.types import Message, MessageEntity, ReplyKeyboardMarkup, ReplyKeyboardRemove
 
 from src.bot.routers.echo import echo_handler, hide_menu_handler
-from src.bot.routers.menu import MENU_TEXT, menu_handler
+from src.bot.routers.menu import MENU_KEYBOARD, MENU_TEXT, menu_handler
 
 
-def test_text_keeps_entities() -> None:
-    """Форматирование передаётся вместе с текстом."""
+def test_text_echo_preserves_formatting_entities() -> None:
+    """Текст и Telegram-сущности форматирования передаются без изменений."""
     message = AsyncMock(spec=Message)
     message.answer = AsyncMock()
     message.send_copy = AsyncMock()
-    message.text = "Привет"
-    message.entities = []
+    message.text = "Жирный текст"
+    message.entities = [MessageEntity(type="bold", offset=0, length=7)]
+
     asyncio.run(echo_handler(message))
-    message.answer.assert_awaited_once_with("Привет", entities=[])
+
+    message.answer.assert_awaited_once_with(
+        "Жирный текст",
+        entities=[MessageEntity(type="bold", offset=0, length=7)],
+    )
+    message.send_copy.assert_not_awaited()
 
 
 def test_unsupported_message_has_reply() -> None:
@@ -37,8 +43,8 @@ def test_menu_shows_commands() -> None:
     message = AsyncMock(spec=Message)
     message.answer = AsyncMock()
     asyncio.run(menu_handler(message))
-    message.answer.assert_awaited_once()
-    assert message.answer.await_args.args[0] == MENU_TEXT
+
+    message.answer.assert_awaited_once_with(MENU_TEXT, reply_markup=MENU_KEYBOARD)
 
 
 def test_hide_menu_removes_keyboard() -> None:
@@ -46,4 +52,7 @@ def test_hide_menu_removes_keyboard() -> None:
     message = AsyncMock(spec=Message)
     message.answer = AsyncMock()
     asyncio.run(hide_menu_handler(message))
-    message.answer.assert_awaited_once()
+
+    reply_markup = message.answer.await_args.kwargs["reply_markup"]
+    assert isinstance(reply_markup, ReplyKeyboardRemove)
+    assert reply_markup.remove_keyboard is True
