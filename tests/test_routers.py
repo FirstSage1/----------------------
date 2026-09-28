@@ -20,10 +20,22 @@ def test_text_echo_preserves_formatting_entities() -> None:
     asyncio.run(echo_handler(message))
 
     message.answer.assert_awaited_once_with(
-        "Жирный текст",
+        text="Жирный текст",
         entities=[MessageEntity(type="bold", offset=0, length=7)],
     )
     message.send_copy.assert_not_awaited()
+
+
+def test_number_message_returns_incremented_value() -> None:
+    """Числовое сообщение получает ответ с числом, увеличенным на единицу."""
+    message = AsyncMock(spec=Message)
+    message.answer = AsyncMock()
+    message.text = "41"
+    message.entities = []
+
+    asyncio.run(echo_handler(message))
+
+    message.answer.assert_awaited_once_with(text="42")
 
 
 def test_unsupported_message_has_reply() -> None:
