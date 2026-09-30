@@ -9,11 +9,14 @@ MENU_TEXT = (
     "Меню команд\n\n"
     "/start — приветствие и краткое описание.\n"
     "/help — справка по возможностям бота.\n"
+    "/chatgpt — включить режим диалога с LLM.\n"
+    "/stopchatgpt — выключить режим диалога.\n"
     "Любое другое сообщение бот повторит без изменений."
 )
 MENU_KEYBOARD = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="/start"), KeyboardButton(text="/help")],
+        [KeyboardButton(text="/chatgpt")],
         [KeyboardButton(text="Скрыть меню")],
     ],
     resize_keyboard=True,

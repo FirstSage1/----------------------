@@ -26,5 +26,6 @@ def test_menu_keyboard_contains_commands_and_hide_button() -> None:
     )
     assert [[button.text for button in row] for row in MENU_KEYBOARD.keyboard] == [
         ["/start", "/help"],
+        ["/chatgpt"],
         ["Скрыть меню"],
     ]

@@ -3,6 +3,7 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 HELP_COMMAND = "/help"
+CHATGPT_COMMAND = "/chatgpt"
 
 
 def help_keyboard() -> ReplyKeyboardMarkup:

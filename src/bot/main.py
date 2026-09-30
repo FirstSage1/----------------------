@@ -13,6 +13,7 @@ from src.bot.routers.echo import router as echo_router
 from src.bot.routers.help import router as help_router
 from src.bot.routers.menu import router as menu_router
 from src.bot.routers.start import router as start_router
+from src.bot.routers import chatgpt
 from src.bot.utils.logging import configure_logging
 
 SESSION_TIMEOUT = 30
@@ -21,19 +22,27 @@ BOT_COMMANDS = [
     BotCommand(command="start", description="Начать работу с ботом"),
     BotCommand(command="menu", description="Открыть меню"),
     BotCommand(command="help", description="Показать справку"),
+    BotCommand(command="chatgpt", description="Включить режим ChatGPT"),
+    BotCommand(command="stopchatgpt", description="Выключить режим ChatGPT"),
 ]
 
 
 def create_dispatcher() -> Dispatcher:
     """Создать диспетчер и подключить все роутеры."""
     dispatcher = Dispatcher()
-    dispatcher.include_routers(start_router, menu_router, help_router, echo_router)
+    dispatcher.include_routers(start_router, menu_router, help_router, chatgpt.router, echo_router)
     return dispatcher
 
 
 async def run_bot() -> None:
     """Проверить соединение и запустить long polling."""
     settings = load_settings()
+    chatgpt.configure(
+        settings.anymodel_api_key,
+        settings.anymodel_model,
+        settings.anymodel_base_url,
+        settings.bot_proxy,
+    )
     configure_logging((settings.bot_token, settings.bot_proxy or ""))
     session = AiohttpSession(proxy=settings.bot_proxy, timeout=SESSION_TIMEOUT)
     bot = Bot(token=settings.bot_token, session=session)
