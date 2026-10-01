@@ -65,7 +65,9 @@ async def run_bot() -> None:
         logging.error(
             "Нет соединения с Telegram API. Проверьте интернет, VPN или прокси."
         )
-        raise SystemExit(1) from None
+        # Отдельный код позволяет скрипту запуска отличать сбой сети
+        # от постоянной ошибки конфигурации и повторить попытку позже.
+        raise SystemExit(2) from None
     finally:
         await bot.session.close()
 
