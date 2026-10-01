@@ -14,6 +14,7 @@ def test_text_echo_preserves_formatting_entities() -> None:
     message = AsyncMock(spec=Message)
     message.answer = AsyncMock()
     message.send_copy = AsyncMock()
+    message.chat = type("ChatStub", (), {"id": 1})()
     message.text = "Жирный текст"
     message.entities = [MessageEntity(type="bold", offset=0, length=7)]
 
@@ -32,6 +33,7 @@ def test_number_message_returns_incremented_value() -> None:
     message.answer = AsyncMock()
     message.text = "41"
     message.entities = []
+    message.chat = type("ChatStub", (), {"id": 1})()
 
     asyncio.run(echo_handler(message))
 

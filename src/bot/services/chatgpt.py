@@ -11,6 +11,7 @@ MAX_HISTORY_MESSAGES: Final = 20
 REQUEST_TIMEOUT: Final = 20
 FALLBACK_MODELS: Final = ("ag/gemini-3.6-flash-medium", "am/kimi-k3", "am/gpt-oss-20b")
 RETRYABLE_STATUSES: Final = (502, 503, 504)
+NETWORK_RETRIES: Final = 2
 
 
 class AnyModelError(RuntimeError):
@@ -37,10 +38,16 @@ class ChatService:
         data: object = None
         last_error = "Не удалось получить ответ от AnyModel."
         for model in self._models:
-            try:
-                data, status = await asyncio.to_thread(self._request, model, history)
-            except (OSError, TimeoutError) as exc:
-                raise AnyModelError("Не удалось связаться с AnyModel.") from exc
+            for attempt in range(NETWORK_RETRIES):
+                try:
+                    data, status = await asyncio.to_thread(self._request, model, history)
+                    break
+                except (OSError, TimeoutError) as exc:
+                    if attempt + 1 == NETWORK_RETRIES:
+                        last_error = "AnyModel временно недоступен. Повторите запрос через несколько секунд."
+                        continue
+            else:
+                continue
             if status < 400:
                 break
             error = data.get("error", {}) if isinstance(data, dict) else {}
@@ -48,13 +55,16 @@ class ChatService:
             if status not in RETRYABLE_STATUSES:
                 raise AnyModelError(last_error)
         else:
+            history.pop()
             raise AnyModelError(last_error)
 
         try:
             answer = data["choices"][0]["message"]["content"]
         except (KeyError, IndexError, TypeError) as exc:
+            history.pop()
             raise AnyModelError("AnyModel вернул неожиданный ответ.") from exc
         if not isinstance(answer, str) or not answer.strip():
+            history.pop()
             raise AnyModelError("AnyModel вернул пустой ответ.")
         history.append({"role": "assistant", "content": answer})
         if len(history) > MAX_HISTORY_MESSAGES:

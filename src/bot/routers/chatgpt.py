@@ -1,10 +1,14 @@
 """Обработчики режима диалога с AnyModel."""
 
 from aiogram import Router
+from aiogram.exceptions import TelegramAPIError
 from aiogram.filters import Command
 from aiogram.types import Message
 
 from src.bot.services.chatgpt import AnyModelError, ChatService
+from src.bot.utils.typing import typing_status
+
+WAITING_TEXT = "Бот печатает…"
 
 router = Router(name="chatgpt")
 _service: ChatService | None = None
@@ -41,9 +45,21 @@ async def chatgpt_message_handler(message: Message) -> None:
     if _service is None:
         await message.answer("Сервис ChatGPT ещё не настроен.")
         return
-    # Сразу подтверждаем получение вопроса: ответ модели может занять несколько секунд.
-    await message.answer("⏳ Обрабатываю вопрос…")
+    status_message = await message.answer(WAITING_TEXT)
+    async with typing_status(message.bot, message.chat.id):
+        try:
+            answer = await _service.ask(message.chat.id, message.text or "")
+        except AnyModelError as exc:
+            answer = f"Не удалось получить ответ: {exc}"
+            try:
+                await status_message.edit_text(answer)
+                return
+            except TelegramAPIError:
+                # Если статус уже удалён, отправим ошибку отдельным сообщением.
+                pass
+    await message.answer(answer)
     try:
-        await message.answer(await _service.ask(message.chat.id, message.text or ""))
-    except AnyModelError as exc:
-        await message.answer(f"Не удалось получить ответ: {exc}")
+        await status_message.delete()
+    except TelegramAPIError:
+        # Ответ уже доставлен; удаление статуса не должно прерывать обработчик.
+        pass
