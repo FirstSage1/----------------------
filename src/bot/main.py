@@ -43,7 +43,7 @@ async def run_bot() -> None:
         settings.anymodel_base_url,
         settings.bot_proxy,
     )
-    configure_logging((settings.bot_token, settings.bot_proxy or ""))
+    configure_logging((settings.bot_token, settings.bot_proxy or "", settings.anymodel_api_key))
     session = AiohttpSession(proxy=settings.bot_proxy, timeout=SESSION_TIMEOUT)
     bot = Bot(token=settings.bot_token, session=session)
     dispatcher = create_dispatcher()

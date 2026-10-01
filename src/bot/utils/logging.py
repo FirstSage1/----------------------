@@ -1,8 +1,13 @@
 """Настройка безопасного журналирования."""
 
 import logging
+from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 LOG_FORMAT = "%(asctime)s %(levelname)s %(message)s"
+LOG_PATH = Path(__file__).resolve().parents[3] / "logs" / "bot.log"
+LOG_MAX_BYTES = 2_000_000
+LOG_BACKUP_COUNT = 3
 
 
 class SafeFormatter(logging.Formatter):
@@ -22,8 +27,13 @@ class SafeFormatter(logging.Formatter):
 
 
 def configure_logging(secrets: tuple[str, ...] = ()) -> None:
-    """Настроить консольный журнал без содержимого сообщений."""
+    """Настроить консольный и ограниченный по размеру файловый журнал."""
+    LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     handler = logging.StreamHandler()
     handler.setFormatter(SafeFormatter(secrets))
-    logging.basicConfig(level=logging.INFO, handlers=[handler], force=True)
+    file_handler = RotatingFileHandler(
+        LOG_PATH, maxBytes=LOG_MAX_BYTES, backupCount=LOG_BACKUP_COUNT, encoding="utf-8"
+    )
+    file_handler.setFormatter(SafeFormatter(secrets))
+    logging.basicConfig(level=logging.INFO, handlers=[handler, file_handler], force=True)
     logging.getLogger("aiogram").setLevel(logging.WARNING)
