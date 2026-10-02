@@ -153,3 +153,4 @@ BOT_PROXY=http://127.0.0.1:10809
 Если появляется сообщение о соединении с Telegram API, проверьте интернет и VPN: бот работает через Telegram Bot API и не сможет получать сообщения при блокировке доступа к `api.telegram.org`.
 
 Настройка прокси соответствует [документации aiogram](https://docs.aiogram.dev/en/latest/api/session/aiohttp.html).
+# доп. изменения
