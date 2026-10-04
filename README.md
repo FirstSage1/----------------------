@@ -220,3 +220,4 @@ HTTP-сервер, публичный домен и webhook для этого з
 
 Формат конфигурации: [Python Pip в Amvera](https://docs.amvera.ru/applications/environments/python-pip.html).
 Загрузка бота: [официальный пример Amvera](https://docs.amvera.ru/general/examples/python-tgbot.html).
+# строка для проверки
