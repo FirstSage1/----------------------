@@ -27,6 +27,7 @@ BOT_COMMANDS = [
     BotCommand(command="mode_normal", description="Обычный режим"),
     BotCommand(command="mode_art", description="Нарисовать изображение"),
     BotCommand(command="mode_translate", description="Перевод RU → EN"),
+    BotCommand(command="mode_summarize", description="Краткое изложение по пунктам"),
 ]
 
 

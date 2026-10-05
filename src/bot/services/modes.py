@@ -7,6 +7,7 @@ class Mode(StrEnum):
     NORMAL = "normal"
     ART = "art"
     TRANSLATE = "translate"
+    SUMMARIZE = "summarize"
 
 
 class ModeService:

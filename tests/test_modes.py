@@ -63,6 +63,18 @@ def test_translation_has_system_prompt_and_no_history() -> None:
     assert not service._histories
 
 
+def test_summarize_has_bullet_prompt_and_no_history() -> None:
+    """Суммаризатор просит пункты и не сохраняет текст в историю."""
+    service = ChatService("test", "primary", "https://example.test/v1")
+    service._request = Mock(return_value=({"choices": [{"message": {"content": "- Факт"}}]}, 200))
+    assert asyncio.run(service.summarize("Длинный текст")) == "- Факт"
+    history = service._request.call_args.args[1]
+    assert history[0]["role"] == "system"
+    assert "пункт" in history[0]["content"]
+    assert history[1] == {"role": "user", "content": "Длинный текст"}
+    assert not service._histories
+
+
 def test_image_decoding_and_payload() -> None:
     service = ChatService("test", "primary", "https://example.test/v1")
     service._request_json = Mock(return_value=({"data": [{"b64_json": base64.b64encode(b"image").decode()}]}, 200))
@@ -101,6 +113,16 @@ def test_translation_splits_long_answer() -> None:
     message = make_message()
     asyncio.run(modes.mode_message_handler(message))
     assert [len(c.args[0]) for c in message.answer.await_args_list[1:]] == [4096, 904]
+
+
+def test_summarizer_calls_service() -> None:
+    modes.mode_service.set(1, Mode.SUMMARIZE)
+    modes._service = AsyncMock()
+    modes._service.summarize.return_value = "- Кратко"
+    message = make_message("Очень длинный текст")
+    asyncio.run(modes.mode_message_handler(message))
+    modes._service.summarize.assert_awaited_once_with("Очень длинный текст")
+    assert message.answer.await_args_list[1].args[0] == "- Кратко"
 
 
 def test_service_error_cleans_status() -> None:

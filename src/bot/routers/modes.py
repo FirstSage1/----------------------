@@ -15,11 +15,13 @@ MODE_TEXTS = {
     Mode.NORMAL: "Обычный режим включён. Бот повторяет сообщения; /chatgpt включает диалог.",
     Mode.ART: "Арт-режим включён. Отправьте описание изображения.",
     Mode.TRANSLATE: "Режим перевода включён. Отправьте текст на русском языке.",
+    Mode.SUMMARIZE: "Режим суммаризатора включён. Отправьте длинный текст для краткого изложения по пунктам.",
 }
 MODE_BUTTONS = {
     "Обычный режим": Mode.NORMAL,
     "Арт": Mode.ART,
     "Перевод RU → EN": Mode.TRANSLATE,
+    "Суммаризатор": Mode.SUMMARIZE,
 }
 router = Router(name="modes")
 mode_service = ModeService()
@@ -54,6 +56,11 @@ async def translate_handler(message: Message) -> None:
     await select_mode(message, Mode.TRANSLATE)
 
 
+@router.message(Command("mode_summarize"))
+async def summarize_handler(message: Message) -> None:
+    await select_mode(message, Mode.SUMMARIZE)
+
+
 @router.message(F.text.in_(MODE_BUTTONS))
 async def mode_button_handler(message: Message) -> None:
     await select_mode(message, MODE_BUTTONS[message.text or ""])
@@ -71,13 +78,22 @@ async def mode_message_handler(message: Message) -> None:
         await message.answer("Сервис AnyModel ещё не настроен.")
         return
     mode = mode_service.get(message.chat.id)
-    status = await message.answer("Рисую изображение…" if mode == Mode.ART else "Перевожу…")
+    status_text = {
+        Mode.ART: "Рисую изображение…",
+        Mode.TRANSLATE: "Перевожу…",
+        Mode.SUMMARIZE: "Составляю краткое изложение…",
+    }
+    status = await message.answer(status_text[mode])
     try:
         if mode == Mode.ART:
             image = await _service.generate_image(message.text)
             await message.answer_photo(BufferedInputFile(image, filename="art.jpg"))
-        else:
+        elif mode == Mode.TRANSLATE:
             answer = await _service.translate(message.text)
+            for offset in range(0, len(answer), TELEGRAM_TEXT_LIMIT):
+                await message.answer(answer[offset:offset + TELEGRAM_TEXT_LIMIT])
+        else:
+            answer = await _service.summarize(message.text)
             for offset in range(0, len(answer), TELEGRAM_TEXT_LIMIT):
                 await message.answer(answer[offset:offset + TELEGRAM_TEXT_LIMIT])
     except (AnyModelError, OSError):

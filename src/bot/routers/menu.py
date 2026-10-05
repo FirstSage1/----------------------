@@ -16,6 +16,7 @@ MENU_TEXT = (
     "/mode_normal — обычный режим (эхо).\n"
     "/mode_art — нарисовать изображение по описанию.\n"
     "/mode_translate — перевод с русского на английский."
+    "\n/mode_summarize — краткое изложение текста по пунктам."
 )
 router = Router(name="menu")
 MENU_KEYBOARD = mode_keyboard()

@@ -12,6 +12,7 @@ def mode_keyboard() -> ReplyKeyboardMarkup:
         keyboard=[
             [KeyboardButton(text="Обычный режим"), KeyboardButton(text="Арт")],
             [KeyboardButton(text="Перевод RU → EN")],
+            [KeyboardButton(text="Суммаризатор")],
             [KeyboardButton(text="/start"), KeyboardButton(text="/help")],
             [KeyboardButton(text="/chatgpt")],
             [KeyboardButton(text="Скрыть меню")],
