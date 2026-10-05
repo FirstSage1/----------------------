@@ -6,7 +6,13 @@ from aiogram.types import Message
 
 from src.bot.keyboards.common import help_keyboard
 
-HELP_TEXT = "Отправьте текст, фотографию или стикер, и я повторю сообщение."
+HELP_TEXT = (
+    "/mode_normal — повторение сообщений, числа увеличиваются на 1.\n"
+    "/mode_art — отправьте описание, и бот нарисует изображение.\n"
+    "/mode_translate — отправьте текст на русском, бот переведёт его на английский.\n"
+    "/chatgpt — диалог с ИИ; /stopchatgpt — возврат в обычный режим.\n"
+    "/menu — кнопки выбора режима. Режим сохраняется до перезапуска бота."
+)
 router = Router(name="help")
 
 

@@ -2,7 +2,9 @@
 
 from aiogram import Router
 from aiogram.filters import Command
-from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup
+from aiogram.types import Message
+
+from src.bot.keyboards.common import mode_keyboard
 
 
 MENU_TEXT = (
@@ -11,18 +13,12 @@ MENU_TEXT = (
     "/help — справка по возможностям бота.\n"
     "/chatgpt — включить режим диалога с LLM.\n"
     "/stopchatgpt — выключить режим диалога.\n"
-    "Любое другое сообщение бот повторит без изменений."
-)
-MENU_KEYBOARD = ReplyKeyboardMarkup(
-    keyboard=[
-        [KeyboardButton(text="/start"), KeyboardButton(text="/help")],
-        [KeyboardButton(text="/chatgpt")],
-        [KeyboardButton(text="Скрыть меню")],
-    ],
-    resize_keyboard=True,
-    input_field_placeholder="Выберите команду или отправьте сообщение",
+    "/mode_normal — обычный режим (эхо).\n"
+    "/mode_art — нарисовать изображение по описанию.\n"
+    "/mode_translate — перевод с русского на английский."
 )
 router = Router(name="menu")
+MENU_KEYBOARD = mode_keyboard()
 
 
 @router.message(Command("menu"))

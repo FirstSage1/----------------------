@@ -6,6 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import Message
 
 from src.bot.services.chatgpt import AnyModelError, ChatService
+from src.bot.services.modes import Mode, ModeService
 from src.bot.utils.typing import typing_status
 
 WAITING_TEXT = "Бот печатает…"
@@ -13,18 +14,31 @@ WAITING_TEXT = "Бот печатает…"
 router = Router(name="chatgpt")
 _service: ChatService | None = None
 _active_chats: set[int] = set()
+_modes: ModeService | None = None
 
 
-def configure(api_key: str, model: str, base_url: str, proxy: str | None = None) -> None:
+def configure(api_key: str, model: str, base_url: str, proxy: str | None = None,
+              mode_service: ModeService | None = None) -> ChatService:
     """Настроить общий сервис диалогов."""
-    global _service
+    global _service, _modes
     _service = ChatService(api_key, model, base_url, proxy)
+    _modes = mode_service
+    return _service
+
+
+def deactivate(chat_id: int) -> None:
+    """Отключить диалог и очистить его историю."""
+    _active_chats.discard(chat_id)
+    if _service is not None:
+        _service.reset(chat_id)
 
 
 @router.message(Command("chatgpt"))
 async def chatgpt_command_handler(message: Message) -> None:
     """Включить режим ChatGPT для текущего чата."""
     _active_chats.add(message.chat.id)
+    if _modes is not None:
+        _modes.set(message.chat.id, Mode.NORMAL)
     if _service is not None:
         _service.reset(message.chat.id)
     await message.answer("Режим ChatGPT включён. Отправьте вопрос или /stopchatgpt для выхода.")
@@ -33,13 +47,16 @@ async def chatgpt_command_handler(message: Message) -> None:
 @router.message(Command("stopchatgpt"))
 async def stop_chatgpt_handler(message: Message) -> None:
     """Выключить режим ChatGPT и очистить контекст."""
-    _active_chats.discard(message.chat.id)
-    if _service is not None:
-        _service.reset(message.chat.id)
+    deactivate(message.chat.id)
+    if _modes is not None:
+        _modes.set(message.chat.id, Mode.NORMAL)
     await message.answer("Режим ChatGPT выключен.")
 
 
-@router.message(lambda message: message.chat.id in _active_chats and message.text is not None)
+@router.message(lambda message: message.chat.id in _active_chats
+                and message.text is not None
+                and message.text != "Скрыть меню"
+                and not message.text.startswith("/"))
 async def chatgpt_message_handler(message: Message) -> None:
     """Передать вопрос пользователя в AnyModel."""
     if _service is None:
